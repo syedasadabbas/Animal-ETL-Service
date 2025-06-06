@@ -1,0 +1,478 @@
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+    <title>ETL Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="p-4">
+    <div class="container">
+        <h2>ETL Dashboard</h2>
+
+        {% if etl_log %}
+        <div class="mb-3">
+            <p><strong>Status:</strong> {{ etl_log.status }}</p>
+            <p><strong>Fetched:</strong> {{ etl_log.total_animals_fetched }}</p>
+            <p><strong>Processed:</strong> {{ etl_log.total_animals_processed }}</p>
+            <p><strong>Posted:</strong> {{ etl_log.total_animals_sent }}</p>
+            <p><strong>Started:</strong> {{ etl_log.process_start }}</p>
+            <p><strong>Ended:</strong> {{ etl_log.process_end }}</p>
+        </div>
+        {% else %}
+            <p>No ETL logs available yet.</p>
+        {% endif %}
+
+        <h3>Animal Records</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>API ID</th>
+                    <th>Name</th>
+                    <th>Species</th>
+                    <th>Age</th>
+                    <th>Friends</th>
+                    <th>Born At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for animal in animals %}
+                <tr>
+                    <td>{{ animal.api_id }}</td>
+                    <td>{{ animal.name }}</td>
+                    <td>{{ animal.species }}</td>
+                    <td>{{ animal.age }}</td>
+                    <td>{{ animal.friends|join:", " }}</td>
+                    <td>{{ animal.born_at|date:"c" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No animals found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <nav>
+          <ul class="pagination">
+            {% if animals.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ animals.previous_page_number }}">Previous</a></li>
+            {% endif %}
+
+            <li class="page-item disabled"><span class="page-link">
+                Page {{ animals.number }} of {{ animals.paginator.num_pages }}
+            </span></li>
+
+            {% if animals.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ animals.next_page_number }}">Next</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ animals.paginator.num_pages }}">Last &raquo;</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+
+        <a class="btn btn-secondary mt-4" href="{% url 'etl:run-etl' %}">🔁 Run ETL Again</a>
+    </div>
+</body>
+</html> {% endcomment %}
+<!-- templates/etl/etl_dashboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ETL Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .progress-container {
+            margin: 20px 0;
+        }
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .stat-label {
+            color: #6c757d;
+        }
+        .log-container {
+            height: 300px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+        }
+        .log-error {
+            color: #ff6b6b;
+        }
+        .log-warning {
+            color: #ffd43b;
+        }
+        .log-info {
+            color: #4dabf7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>ETL Dashboard</h1>
+            <button id="run-etl-btn" class="btn btn-primary btn-lg">Run ETL Process</button>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">ETL Progress</h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span id="current-step">Ready to start</span>
+                    <span id="progress-text">0%</span>
+                </div>
+                <div class="progress" style="height: 30px;">
+                    <div id="overall-progress" class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+                
+                <div class="mt-4">
+                    <h4>Stage Progress</h4>
+                    <div class="progress-container">
+                        <label>Fetching Pages</label>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div id="fetch-progress" class="progress-bar bg-info" style="width: 0%"></div>
+                        </div>
+                        
+                        <label>Processing Animals</label>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div id="process-progress" class="progress-bar bg-success" style="width: 0%"></div>
+                        </div>
+                        
+                        <label>Posting Batches</label>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div id="post-progress" class="progress-bar bg-warning" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-grid mb-4">
+            <div class="stat-card">
+                <div class="stat-value" id="total-found">0</div>
+                <div class="stat-label">Animals Found</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="processed">0</div>
+                <div class="stat-label">Animals Processed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="posted">0</div>
+                <div class="stat-label">Animals Posted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="batches">0</div>
+                <div class="stat-label">Batches Posted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="errors">0</div>
+                <div class="stat-label">Errors Encountered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="duration">0s</div>
+                <div class="stat-label">Duration</div>
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+<h3>Animal Records</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>API ID</th>
+            <th>Name</th>
+            <th>Species</th>
+            <th>Age</th>
+            <th>Friends</th>
+            <th>Born At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for animal in animals %}
+        <tr>
+            <td>{{ animal.api_id }}</td>
+            <td>{{ animal.name }}</td>
+            <td>{{ animal.species }}</td>
+            <td>{{ animal.age }}</td>
+            <td>{{ animal.friends|join:", " }}</td>
+            <td>{{ animal.born_at|date:"c" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No animals found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<nav>
+  <ul class="pagination">
+    {% if animals.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+      <li class="page-item"><a class="page-link" href="?page={{ animals.previous_page_number }}">Previous</a></li>
+    {% endif %}
+
+    <li class="page-item disabled"><span class="page-link">
+        Page {{ animals.number }} of {{ animals.paginator.num_pages }}
+    </span></li>
+
+    {% if animals.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ animals.next_page_number }}">Next</a></li>
+      <li class="page-item"><a class="page-link" href="?page={{ animals.paginator.num_pages }}">Last &raquo;</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+        <!-- Charts Section -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">Progress Distribution</div>
+                    <div class="card-body">
+                        <canvas id="progress-chart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">Error Types</div>
+                    <div class="card-body">
+                        <canvas id="error-chart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="card">
+            <div class="card-header">Real-time Logs</div>
+            <div class="card-body">
+                <div class="log-container" id="log-container">
+                    <div class="log-entry log-info">System ready. Click "Run ETL Process" to start.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let etlJobId = null;
+        let progressChart = null;
+        let errorChart = null;
+        let isEtlRunning = false;
+        let updateInterval = null;
+        let logEventSource = null;
+
+        // Initialize charts
+        function initCharts() {
+            const progressCtx = document.getElementById('progress-chart').getContext('2d');
+            progressChart = new Chart(progressCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Processed', 'Remaining'],
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: ['#4caf50', '#e0e0e0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Processing Progress' }
+                    }
+                }
+            });
+
+            const errorCtx = document.getElementById('error-chart').getContext('2d');
+            errorChart = new Chart(errorCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Network', 'Data', 'Transformation', 'Posting'],
+                    datasets: [{
+                        label: 'Error Count',
+                        data: [0, 0, 0, 0],
+                        backgroundColor: '#f44336',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function updateProgress(stats) {
+            const overallProgress = stats.total_found > 0 ? 
+                Math.round((stats.processed / stats.total_found) * 100) : 0;
+            
+            document.getElementById('overall-progress').style.width = `${overallProgress}%`;
+            document.getElementById('progress-text').textContent = `${overallProgress}%`;
+            document.getElementById('current-step').textContent = stats.step || 'Processing';
+            
+            const fetchProgress = stats.total_found > 0 ? 100 : 0;
+            const processProgress = stats.total_found > 0 ? 
+                Math.round((stats.processed / stats.total_found) * 100) : 0;
+            const postProgress = stats.total_found > 0 ? 
+                Math.round((stats.posted / stats.total_found) * 100) : 0;
+            
+            document.getElementById('fetch-progress').style.width = `${fetchProgress}%`;
+            document.getElementById('process-progress').style.width = `${processProgress}%`;
+            document.getElementById('post-progress').style.width = `${postProgress}%`;
+            
+            document.getElementById('total-found').textContent = stats.total_found;
+            document.getElementById('processed').textContent = stats.processed;
+            document.getElementById('posted').textContent = stats.posted;
+            document.getElementById('batches').textContent = stats.batches;
+            document.getElementById('errors').textContent = stats.errors;
+            document.getElementById('duration').textContent = `${Math.round(stats.duration)}s`;
+            
+            if (progressChart) {
+                progressChart.data.datasets[0].data = [
+                    stats.processed, 
+                    Math.max(0, stats.total_found - stats.processed)
+                ];
+                progressChart.update();
+            }
+        }
+
+        function addLogEntry(message, type = 'info') {
+            const container = document.getElementById('log-container');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+            
+            if (container.children.length > 100) {
+                container.removeChild(container.firstChild);
+            }
+        }
+
+        function startLogStream() {
+            if (logEventSource) logEventSource.close();
+            
+            logEventSource = new EventSource('/etl/logs/');
+            logEventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                addLogEntry(data.log, data.type || 'info');
+            };
+        }
+
+        async function fetchEtlStatus() {
+            try {
+                const response = await fetch('/etl/status/');
+                return await response.json();
+            } catch (error) {
+                console.error('Failed to fetch ETL status:', error);
+                return null;
+            }
+        }
+
+        async function startEtlProcess() {
+            if (isEtlRunning) return;
+            
+            const button = document.getElementById('run-etl-btn');
+            button.disabled = true;
+            button.textContent = 'Running ETL...';
+            isEtlRunning = true;
+            
+            addLogEntry('Starting ETL process...', 'info');
+            
+            try {
+                const response = await fetch('/etl/run/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ batch_size: 100 })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    etlJobId = result.job_id;
+                    addLogEntry(`ETL process started with job ID: ${etlJobId}`, 'info');
+                } else {
+                    addLogEntry(`Failed to start ETL: ${result.error}`, 'error');
+                    isEtlRunning = false;
+                    button.disabled = false;
+                    button.textContent = 'Run ETL Process';
+                }
+            } catch (error) {
+                addLogEntry(`Error starting ETL: ${error.message}`, 'error');
+                isEtlRunning = false;
+                button.disabled = false;
+                button.textContent = 'Run ETL Process';
+            }
+        }
+
+        async function monitorEtlProgress() {
+            if (!isEtlRunning) return;
+            
+            const status = await fetchEtlStatus();
+            if (status) {
+                updateProgress(status);
+                
+                if (status.step === 'Completed' || status.step === 'Failed') {
+                    isEtlRunning = false;
+                    clearInterval(updateInterval);
+                    
+                    const button = document.getElementById('run-etl-btn');
+                    button.disabled = false;
+                    button.textContent = 'Run ETL Process';
+                    
+                    if (status.step === 'Completed') {
+                        addLogEntry('ETL process completed successfully!', 'info');
+                    } else {
+                        addLogEntry('ETL process failed!', 'error');
+                    }
+                }
+            }
+        }
+
+        function initDashboard() {
+            initCharts();
+            startLogStream();
+            
+            document.getElementById('run-etl-btn').addEventListener('click', startEtlProcess);
+            
+            updateInterval = setInterval(monitorEtlProgress, 2000);
+            
+            fetchEtlStatus().then(updateProgress);
+        }
+
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
