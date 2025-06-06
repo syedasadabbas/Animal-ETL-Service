@@ -279,6 +279,8 @@ def main():
         print("✅ ETL process completed successfully!")
     else:
         print("⚠️  ETL process completed with issues")
+    
+    input("\nPress any key to exit...")
 
 
 if __name__ == "__main__":
