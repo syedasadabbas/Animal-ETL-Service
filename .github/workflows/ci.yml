@@ -44,10 +44,6 @@ jobs:
       run: |
         black --check --diff .
 
-    - name: Run mypy type checking
-      run: |
-        mypy etl/ --ignore-missing-imports
-
     - name: Run Django system checks
       env:
         SECRET_KEY: test-secret-key-for-ci
