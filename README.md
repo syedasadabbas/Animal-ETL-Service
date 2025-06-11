@@ -205,3 +205,35 @@ Best for **Manual execution**
 python animal_etl.py
 ```
 Best for **Simple deployments**
+
+
+### CI PIPLINE CREATION
+Created CI Pipeline through `.github/workflows/ci.yml` and also created security check through `.github/workflows/security.yml`
+![Screenshot 2025-06-12 021349](https://github.com/user-attachments/assets/c3af91ab-6cbb-4c55-9ac1-6605f2fc7da0)
+
+
+### UNIT TESTS IMPLEMENTATION
+Implemented Unit Tests for Complete ETL Procedure. Also created a view to run test from.
+![Screenshot 2025-06-12 005859](https://github.com/user-attachments/assets/63572450-480a-4390-881f-3de82045059e)
+
+We can also run test by running this command in Django: `python manage.py test`
+![Screenshot 2025-06-12 022258](https://github.com/user-attachments/assets/0f8a8574-d09a-4609-aa61-5f9eefcdad0b)
+
+Whenever the code is pushed to develop or main branch, the CI pipeline will run tests along with the unit tests for complete ETL Procedure involving 23 different tests in unit tests.
+
+
+### FORMATTING TOOL
+Used **black formatter** as a formatting tool and implemented it's test in CI pipeline
+
+
+### CI PIPELINE TESTS SCREENSHOTS
+
+**test(3.10)**
+![image](https://github.com/user-attachments/assets/f4330b66-1e8c-4feb-84d6-a49b47835fe7)
+
+**test(3.11)**
+![image](https://github.com/user-attachments/assets/13e66a10-12a3-45dc-b8d0-238c5ec63a43)
+
+**security**
+![image](https://github.com/user-attachments/assets/14586e1a-a36b-4c25-811e-11ac58b802ee)
+
