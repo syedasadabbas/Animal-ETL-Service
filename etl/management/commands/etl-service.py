@@ -1,5 +1,7 @@
 import logging
+
 from django.core.management.base import BaseCommand
+
 from etl.utils.etl_service import run_etl_process
 
 logging.basicConfig(

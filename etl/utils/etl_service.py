@@ -1,18 +1,15 @@
-import requests
 import logging
 from datetime import datetime
-from typing import List, Dict, Any
-from etl.models import APIErrorLog, Animal, ETLProcessingLog
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_exponential,
-    retry_if_exception_type,
-    retry_if_exception,
-)
-from requests.exceptions import RequestException, HTTPError
+from typing import Any, Dict, List
+
 import pytz
+import requests
 from django.utils import timezone
+from requests.exceptions import HTTPError, RequestException
+from tenacity import (retry, retry_if_exception, retry_if_exception_type,
+                      stop_after_attempt, wait_exponential)
+
+from etl.models import Animal, APIErrorLog, ETLProcessingLog
 
 logger = logging.getLogger(__name__)
 

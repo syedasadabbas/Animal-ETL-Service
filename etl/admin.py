@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Animal, ETLProcessingLog, APIErrorLog
+
+from .models import Animal, APIErrorLog, ETLProcessingLog
 
 
 @admin.register(Animal)

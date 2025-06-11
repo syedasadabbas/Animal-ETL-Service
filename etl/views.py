@@ -1,20 +1,22 @@
 import io
 import json
 import logging
-from threading import Thread
 import unittest
+from threading import Thread
+
 from django.core.paginator import Paginator
-from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.shortcuts import render
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from etl import tests
-from .utils.etl_service import run_etl_process, etl_stats
-from .models import ETLProcessingLog, Animal
+
+from .models import Animal, ETLProcessingLog
+from .utils.etl_service import etl_stats, run_etl_process
 
 logger = logging.getLogger(__name__)
 
