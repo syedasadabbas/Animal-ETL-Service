@@ -6,7 +6,7 @@ pre-commit==3.7.0
 
 # Type checking
 mypy==1.10.0
-types-pytz==2023.7.0
+types-pytz
 types-requests
 
 # Testing and coverage
