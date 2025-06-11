@@ -6,8 +6,13 @@ import pytz
 import requests
 from django.utils import timezone
 from requests.exceptions import HTTPError, RequestException
-from tenacity import (retry, retry_if_exception, retry_if_exception_type,
-                      stop_after_attempt, wait_exponential)
+from tenacity import (
+    retry,
+    retry_if_exception,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from etl.models import Animal, APIErrorLog, ETLProcessingLog
 
