@@ -7,63 +7,126 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Animal',
+            name="Animal",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('api_id', models.IntegerField(help_text='Original ID from API', unique=True)),
-                ('name', models.CharField(max_length=255)),
-                ('species', models.CharField(max_length=100)),
-                ('age', models.IntegerField(blank=True, null=True)),
-                ('friends_raw', models.TextField(help_text='Original comma-delimited friends string')),
-                ('born_at_raw', models.CharField(blank=True, help_text='Original born_at string', max_length=100, null=True)),
-                ('friends', models.JSONField(default=list, help_text='Transformed friends array')),
-                ('born_at', models.DateTimeField(blank=True, help_text='Transformed ISO8601 UTC timestamp', null=True)),
-                ('processed_at', models.DateTimeField(auto_now_add=True)),
-                ('is_processed', models.BooleanField(default=False)),
-                ('is_sent_to_home', models.BooleanField(default=False)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "api_id",
+                    models.IntegerField(help_text="Original ID from API", unique=True),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("species", models.CharField(max_length=100)),
+                ("age", models.IntegerField(blank=True, null=True)),
+                (
+                    "friends_raw",
+                    models.TextField(
+                        help_text="Original comma-delimited friends string"
+                    ),
+                ),
+                (
+                    "born_at_raw",
+                    models.CharField(
+                        blank=True,
+                        help_text="Original born_at string",
+                        max_length=100,
+                        null=True,
+                    ),
+                ),
+                (
+                    "friends",
+                    models.JSONField(
+                        default=list, help_text="Transformed friends array"
+                    ),
+                ),
+                (
+                    "born_at",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="Transformed ISO8601 UTC timestamp",
+                        null=True,
+                    ),
+                ),
+                ("processed_at", models.DateTimeField(auto_now_add=True)),
+                ("is_processed", models.BooleanField(default=False)),
+                ("is_sent_to_home", models.BooleanField(default=False)),
             ],
             options={
-                'db_table': 'animals',
-                'ordering': ['api_id'],
+                "db_table": "animals",
+                "ordering": ["api_id"],
             },
         ),
         migrations.CreateModel(
-            name='APIErrorLog',
+            name="APIErrorLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('endpoint', models.CharField(max_length=255)),
-                ('error_type', models.CharField(max_length=50)),
-                ('error_message', models.TextField()),
-                ('http_status_code', models.IntegerField(blank=True, null=True)),
-                ('retry_attempt', models.IntegerField(default=0)),
-                ('occurred_at', models.DateTimeField(auto_now_add=True)),
-                ('resolved', models.BooleanField(default=False)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("endpoint", models.CharField(max_length=255)),
+                ("error_type", models.CharField(max_length=50)),
+                ("error_message", models.TextField()),
+                ("http_status_code", models.IntegerField(blank=True, null=True)),
+                ("retry_attempt", models.IntegerField(default=0)),
+                ("occurred_at", models.DateTimeField(auto_now_add=True)),
+                ("resolved", models.BooleanField(default=False)),
             ],
             options={
-                'db_table': 'api_error_logs',
-                'ordering': ['-occurred_at'],
+                "db_table": "api_error_logs",
+                "ordering": ["-occurred_at"],
             },
         ),
         migrations.CreateModel(
-            name='ETLProcessingLog',
+            name="ETLProcessingLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('process_start', models.DateTimeField(auto_now_add=True)),
-                ('process_end', models.DateTimeField(blank=True, null=True)),
-                ('total_animals_fetched', models.IntegerField(default=0)),
-                ('total_animals_processed', models.IntegerField(default=0)),
-                ('total_animals_sent', models.IntegerField(default=0)),
-                ('errors_encountered', models.TextField(blank=True)),
-                ('status', models.CharField(choices=[('running', 'Running'), ('completed', 'Completed'), ('failed', 'Failed'), ('partial', 'Partially Completed')], default='running', max_length=20)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("process_start", models.DateTimeField(auto_now_add=True)),
+                ("process_end", models.DateTimeField(blank=True, null=True)),
+                ("total_animals_fetched", models.IntegerField(default=0)),
+                ("total_animals_processed", models.IntegerField(default=0)),
+                ("total_animals_sent", models.IntegerField(default=0)),
+                ("errors_encountered", models.TextField(blank=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("running", "Running"),
+                            ("completed", "Completed"),
+                            ("failed", "Failed"),
+                            ("partial", "Partially Completed"),
+                        ],
+                        default="running",
+                        max_length=20,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'etl_processing_logs',
-                'ordering': ['-process_start'],
+                "db_table": "etl_processing_logs",
+                "ordering": ["-process_start"],
             },
         ),
     ]

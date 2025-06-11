@@ -137,12 +137,15 @@ def etl_dashboard(request):
 ```
 ### ETL DASHBOARD
 **Task Progress**:
+
 ![Screenshot 2025-06-06 223451](https://github.com/user-attachments/assets/b3227f92-e9fb-4324-9e44-da7b37367b0d)
 
 **Animal Data Table: (Extracted from db)**:
+
 ![Screenshot 2025-06-06 223504](https://github.com/user-attachments/assets/0efb1317-71e5-4719-8900-69f26a859bf5)
 
 **Pie Chart to shpw progressed data numbers and remaining numbers**:
+
 ![Screenshot 2025-06-06 223516](https://github.com/user-attachments/assets/a6f41261-8239-45bb-94e0-2295204bdfae)
 
 ### 2. Comprehensive Logging:
@@ -157,6 +160,7 @@ class ETLStats:
 ```
 
 **Real time Logs**:
+
 ![Screenshot 2025-06-06 223525](https://github.com/user-attachments/assets/55966319-4aa3-41dc-acdb-6263f195c0e7)
 
 ### 3. Database Auditing:
