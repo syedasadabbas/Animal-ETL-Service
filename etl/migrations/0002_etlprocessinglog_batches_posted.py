@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('etl', '0001_initial'),
+        ("etl", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='etlprocessinglog',
-            name='batches_posted',
+            model_name="etlprocessinglog",
+            name="batches_posted",
             field=models.IntegerField(blank=True, default=0, null=True),
         ),
     ]

@@ -1,0 +1,45 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install safety bandit semgrep
+    
+    - name: Run comprehensive security scan
+      run: |
+        # Dependency vulnerabilities
+        safety check --json --output safety-report.json || true
+        
+        # Code security issues
+        bandit -r etl/ -f json -o bandit-report.json || true
+        
+        # Static analysis security scan
+        semgrep --config=auto --json --output=semgrep-report.json . || true
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          safety-report.json
+          bandit-report.json  
+          semgrep-report.json
+        retention-days: 30
