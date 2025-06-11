@@ -11,8 +11,12 @@ from typing import Any, Dict, List
 import pytz
 import requests
 from requests.exceptions import HTTPError, RequestException
-from tenacity import (retry, retry_if_exception_type, stop_after_attempt,
-                      wait_exponential)
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 BASE_URL = "http://localhost:3123"
 BATCH_SIZE = 100
